@@ -1,67 +1,27 @@
-GBrain Technical Documentation
-===============================
+# GBrain 技术图谱
+
+> 本书以 GBrain v0.22 源码为案例，系统解析一个生产级 Agent Memory 系统的内部设计与实现逻辑。
+> 目标读者：具备一定编程经验、对 LLM 应用有兴趣、想理解「AI 如何拥有持久记忆」这一核心问题的开发者。
 
 ```{toctree}
 :maxdepth: 2
-:caption: Overview
 
-README
-overview/introduction
-overview/architecture
-overview/installation
+introduction
+philosophy
+memory-model
+write-flow
+query-flow
+knowledge-graph
+hybrid-search
+skill-system
+skill-packs
+advanced-topics
 ```
 
 ```{toctree}
-:maxdepth: 2
-:caption: Core Concepts
+:caption: 附录
+:maxdepth: 1
 
-concepts/engines
-concepts/operations
-concepts/knowledge-graph
-concepts/skills-system
-concepts/search-ranking
+appendix/glossary
+appendix/credits
 ```
-
-```{toctree}
-:maxdepth: 2
-:caption: Commands Reference
-
-commands/cli-overview
-commands/doctor
-commands/sync
-commands/embed
-commands/extract
-commands/dream
-commands/jobs
-commands/migrate
-commands/lint
-commands/backlinks
-commands/report
-commands/orphans
-commands/code-def
-```
-
-```{toctree}
-:maxdepth: 2
-:caption: Skills Reference
-
-skills/skill-reference
-skills/signal-detector
-skills/brain-ops
-skills/ingest
-skills/idea-ingest
-skills/media-ingest
-skills/meeting-ingestion
-skills/enrich
-skills/query
-skills/maintain
-skills/citation-fixer
-skills/repo-architecture
-```
-
-Indices and tables
-==================
-
-* {ref}`genindex`
-* {ref}`modindex`
-* {ref}`search`
