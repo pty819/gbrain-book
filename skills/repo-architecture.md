@@ -8,7 +8,7 @@ Ensures consistent organization by routing new pages to the correct directory ba
 
 ## Filing Decision Tree
 
-```mermaid
+```{mermaid}
 graph TD
     A[New Page] --> B{Primary Subject?}
     B -->|Person| C[people/]

@@ -14,7 +14,7 @@ Your AI agent is smart but forgetful. GBrain gives it a brain.
 
 ## The Core Loop
 
-```mermaid
+```{mermaid}
 graph LR
     A[Signal arrives] --> B[Signal Detector]
     B --> C[Brain-Ops Lookup]

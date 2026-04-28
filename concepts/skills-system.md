@@ -4,7 +4,7 @@ GBrain's intelligence lives in its **skills** — fat markdown files that encode
 
 ## Philosophy: Thin Harness, Fat Skills
 
-```mermaid
+```{mermaid}
 graph TB
     subgraph "GBrain Runtime (Thin)"
         CORE[Core Engine<br/>Search, Embed, Import]

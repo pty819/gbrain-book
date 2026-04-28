@@ -78,7 +78,7 @@ const engine = await createEngine('postgres', { connectionString: '...' });
 
 Use this decision tree:
 
-```mermaid
+```{mermaid}
 graph TD
     A[How many files?] --> B{>1000?}
     B -->|Yes| C[Use Postgres]

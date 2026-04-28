@@ -8,7 +8,7 @@ Ensures every response is grounded in existing brain knowledge before making ext
 
 ## The Loop
 
-```mermaid
+```{mermaid}
 graph LR
     A[User Query] --> B{GBrain has<br/>info?}
     B -->|Yes| C[Lookup brain]

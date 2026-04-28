@@ -24,7 +24,7 @@ Detects input type and delegates to the appropriate ingestion skill.
 
 ## Decision Flow
 
-```mermaid
+```{mermaid}
 graph TD
     A[Input] --> B{Type?}
     B -->|URL| C[idea-ingest]

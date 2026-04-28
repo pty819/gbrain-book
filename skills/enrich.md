@@ -35,7 +35,7 @@ Trigger: 1 mention
 
 ## Enrichment Process
 
-```mermaid
+```{mermaid}
 graph LR
     A[Entity] --> B{Tier}
     B -->|1| C[Full Pipeline]

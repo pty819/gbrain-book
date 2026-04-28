@@ -8,7 +8,7 @@ Captures original thinking and entity mentions as they happen, enabling the brai
 
 ## How It Works
 
-```mermaid
+```{mermaid}
 graph LR
     A[User Message] --> B[Spawn Cheap Model<br/>Parallel, Non-blocking]
     B --> C[Extract Ideas]

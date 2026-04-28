@@ -4,7 +4,7 @@ GBrain's search combines vector similarity, keyword BM25, and graph boosting int
 
 ## Search Pipeline
 
-```mermaid
+```{mermaid}
 graph TD
     A[Query] --> B[Intent Classification]
     B --> C[Query Expansion]

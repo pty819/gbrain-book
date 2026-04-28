@@ -4,7 +4,7 @@
 
 GBrain is organized around a contract-first design where `src/core/operations.ts` defines ~41 shared operations. Both the CLI and MCP server are generated from this single source of truth.
 
-```mermaid
+```{mermaid}
 graph TB
     subgraph "External Layer"
         CLI[CLI: gbrain]
@@ -87,7 +87,7 @@ BullMQ-inspired, Postgres-native job queue:
 
 ## Data Flow
 
-```mermaid
+```{mermaid}
 sequenceDiagram
     participant Agent
     participant MCP

@@ -4,7 +4,7 @@ GBrain's knowledge graph is the self-wiring layer that makes every page part of 
 
 ## Graph Architecture
 
-```mermaid
+```{mermaid}
 graph LR
     A[Person Page] -->|works_at| B[Company Page]
     C[Company Page] -->|invested_in| D[Deal Page]
@@ -59,7 +59,7 @@ gbrain graph-query "alice" --depth 2
 
 The **Iron Law** of GBrain: if page A links to page B, page B should backlink to page A.
 
-```mermaid
+```{mermaid}
 graph LR
     A[Page A] -->|links to| B[Page B]
     B -->|backlinks to| A
