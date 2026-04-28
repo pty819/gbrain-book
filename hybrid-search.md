@@ -516,34 +516,38 @@ hybridSearch(engine, query, {
 ### 8.6.4 两遍检索流程图
 
 ```{mermaid}
-flowchart TD
-    subgraph Pass1["第一遍：锚点检索"]
-        Q["查询: 'useState hook'"
+flowchart TB
+    Q["查询: useState hook"]
+
+    subgraph P1["== 第一遍：锚点检索 =="]
         K1["关键词搜索 Top N"]
         V1["向量搜索 Top N"]
         Merge["RRF 融合"]
-        AnchorSet["锚点集<br/>Top 10 Chunks"
-        AnchorSet --> Walk
+        Anchor["锚点集: Top 10 Chunks"]
+        K1 & V1 --> Merge --> Anchor
     end
 
-    subgraph Pass2["第二遍：图扩展"]
-        Walk["沿代码边遍历"]
-        CE1["code_edges_chunk<br/>to_chunk_id 直接"]
-        CE2["code_edges_symbol<br/>需反向解析符号"]
-        Neighbor["结构邻居<br/>score × 1/(1+hop)"]
-        Merge2["与锚点集合并<br/>按 score 排序"]
+    subgraph P2["== 第二遍：图扩展 =="]
+        Walk["沿 code_edges 遍历"]
+        CE1["code_edges_chunk: to_chunk_id"]
+        CE2["code_edges_symbol: 符号反向查找"]
+        Neighbor["结构邻居: score × 1/(1+hop)"]
+        Merge2["与锚点集合并，按 score 排序"]
+        Walk --> CE1 --> Neighbor
+        Walk --> CE2 --> Neighbor
+        Merge2 --> Neighbor
     end
 
-    subgraph Dedup["去重"]
-        DedupLayer["四层去重<br/>+ compiled_truth 保障"]
+    subgraph P3["== 去重 =="]
+        Dedup["四层去重 + compiled_truth 保障"]
     end
 
-    Pass1 --> AnchorSet --> Walk --> Pass2 --> DedupLayer
-    K1 & V1 --> Merge --> AnchorSet
+    P1 --> Anchor --> Walk --> P2 --> Dedup --> P3
 
-    style AnchorSet fill:#e1f5fe
+    style Q fill:#e3f2fd
+    style Anchor fill:#e1f5fe
     style Walk fill:#fff3e0
-    style DedupLayer fill:#f3e5f5
+    style Dedup fill:#f3e5f5
 ```
 
 ---

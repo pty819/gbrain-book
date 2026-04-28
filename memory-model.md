@@ -12,22 +12,6 @@
 
 ### 核心字段
 
-```{mermaid}
-erDiagram
-    pages {
-        text id "主键 UUID"
-        text slug "URL-safe 唯一标识符"
-        text title "页面标题"
-        text type "页面类型 (person/project/event...)"
-        text compiled_truth "正文内容（编译后的 Markdown）"
-        text timeline "时间线内容"
-        jsonb frontmatter "YAML 元数据"
-        integer remote "信任标记: 0=本地, 1=外部导入"
-        timestamptz created_at "创建时间"
-        timestamptz updated_at "更新时间"
-    }
-```
-
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `id` | UUID | 全局唯一主键 |
@@ -38,6 +22,16 @@ erDiagram
 | `timeline` | text | 时间线部分内容 |
 | `frontmatter` | JSONB | 解析后的 YAML 元数据 |
 | `remote` | integer | **信任边界标记**：0=本地生成（trusted），1=外部导入（untrusted） |
+
+#### Page 的 ER 关系
+
+```{mermaid}
+erDiagram
+    pages ||--o{ content_chunks : "has"
+    pages ||--o{ links : "from"
+    pages ||--o{ links : "to"
+    pages ||--o{ timeline_entries : "has"
+```
 | `created_at` | timestamptz | 创建时间戳 |
 | `updated_at` | timestamptz | 最后更新时间戳 |
 
@@ -95,25 +89,6 @@ Slug 的特点：
 
 ### Chunk 的结构
 
-```{mermaid}
-erDiagram
-    pages ||--o{ content_chunks : "one-to-many"
-    
-    content_chunks {
-        text id "主键 UUID"
-        text page_id "父页面 ID (外键)"
-        text chunk_source "来源: 'page' / 'fenced_code' / ..."
-        text content "分块内容文本"
-        text embedding "向量嵌入 (1536维)"
-        integer token_count "token 数量"
-        integer start_char_index "在原文中的起始位置"
-        integer end_char_index "在原文中的结束位置"
-        boolean is_dirty "污点标记: 是否需要重新嵌入"
-        timestamptz created_at
-        timestamptz updated_at
-    }
-```
-
 | 字段 | 说明 |
 |------|------|
 | `page_id` | 指向所属 Page 的外键 |
@@ -124,28 +99,38 @@ erDiagram
 | `start_char_index` / `end_char_index` | 在原始 Page 中的位置（用于回溯原文） |
 | `is_dirty` | **污点标记**：为 `true` 时表示内容已修改，需要重新生成 embedding |
 
+#### Chunk 与 Page 的关系
+
+```{mermaid}
+erDiagram
+    pages ||--o{ content_chunks : "one-to-many"
+```
+
 ### 分块策略（Chunker）
 
 GBrain 支持多种分块策略，适用于不同类型的内容：
 
 ```{mermaid}
 flowchart TD
-    A["原始内容"] --> B{选择策略}
-    
-    B --> C["Recursive\n递归文本分块"]
-    B --> D["Code\n代码文件分块"]
-    B --> E["Semantic\n语义分块"]
-    
-    C --> C1["按段落/句子递归切分\n保持语义完整性"]
-    
-    D --> D1["使用 tree-sitter 解析\n按函数/类切分"]
-    
-    E --> E1["使用 LLM 判断\n自然语义断点"]
-    
-    C1 --> F["Chunk 列表"]
+    A["原始内容"]
+    B{选择策略}
+    C["Recursive 递归文本分块"]
+    D["Code 代码文件分块"]
+    E["Semantic 语义分块"]
+    C1["按段落/句子递归切分"]
+    D1["使用 tree-sitter 解析"]
+    E1["使用 LLM 判断自然语义断点"]
+    A --> B
+    B --> C
+    B --> D
+    B --> E
+    C --> C1
+    D --> D1
+    E --> E1
+    C1 --> F
     D1 --> F
     E1 --> F
-```
+    F["Chunk 列表"]
 
 #### 1. Recursive（递归文本分块）
 
@@ -213,24 +198,12 @@ flowchart TD
 
 ### 边的类型
 
-GBrain 中的 Link（链接）表示 Page 之间的关系，形成知识图谱：
+### Link 与 Page 的关系
 
 ```{mermaid}
 erDiagram
-    pages ||--o{ links : "from 端"
-    pages ||--o{ links : "to 端"
-    
-    links {
-        text id "主键 UUID"
-        text from_page_id "源页面 ID"
-        text to_page_id "目标页面 ID"
-        text link_type "链接类型"
-        text context "上下文文本"
-        text link_source "来源: markdown/frontmatter/manual"
-        text origin_slug "frontmatter 来源页面"
-        text origin_field "frontmatter 字段名"
-        timestamptz created_at
-    }
+    pages ||--o{ links : "from"
+    pages ||--o{ links : "to"
 ```
 
 | 链接类型 | 语法示例 | 说明 |
@@ -349,28 +322,16 @@ flowchart TD
 
 **CodeEdge（代码边）** 是 Cathedral II 版本引入的，专门用于表示代码块之间的调用关系：
 
+| 表 | 说明 |
+|---|---|
+| `code_edges_chunk` | 直接调用关系（from_chunk → to_chunk） |
+| `code_edges_symbol` | 符号表（函数/类名 → 定义所在 Chunk） |
+
 ```{mermaid}
 erDiagram
-    content_chunks ||--o{ code_edges_chunk : "调用关系"
-    
-    code_edges_chunk {
-        text id "主键 UUID"
-        text from_chunk_id "调用方 Chunk ID"
-        text to_chunk_id "被调用方 Chunk ID"
-        text from_function "调用方函数名"
-        text to_function "被调用方函数名"
-        text edge_type "边类型: 'calls' / 'imports' / ..."
-        timestamptz created_at
-    }
-    
-    code_edges_symbol {
-        text id "主键 UUID"
-        text from_chunk_id "调用方 Chunk ID"
-        text symbol_name "符号名 (函数/类名)"
-        text symbol_type "符号类型"
-        text definition_chunk_id "定义所在 Chunk"
-        timestamptz created_at
-    }
+    content_chunks ||--o{ code_edges_chunk : "calls"
+    code_edges_chunk }o--|| code_edges_symbol : "resolves"
+    content_chunks ||--o{ code_edges_symbol : "defines"
 ```
 
 ### tree-sitter 解析
@@ -390,20 +351,19 @@ CodeEdge 支持 Cathedral II 的**两遍检索**（two-pass retrieval）：
 
 ```{mermaid}
 flowchart TD
-    A["查询: 'foo 函数的实现在哪里'"]
-    
+    A["查询: foo 函数的实现在哪里"]
     B["第一遍: 锚点搜索"]
-    B --> C["关键词/向量搜索找到 foo"]
-    
-    C --> D["expandAnchors() 扩展"]
-    D --> E["通过 code_edges_chunk 找直接调用"]
-    E --> F["通过 code_edges_symbol 找符号引用"]
-    
-    F --> G["第二遍: 结构邻居收集"]
-    G --> H["按跳数距离加权"]
-    G --> I["hydrateChunks() 补全元数据"]
-    
-    I --> J["最终结果"]
+    C["关键词/向量搜索找到 foo"]
+    D["expandAnchors() 扩展"]
+    E["通过 code_edges_chunk 找直接调用"]
+    F["通过 code_edges_symbol 找符号引用"]
+    G["第二遍: 结构邻居收集"]
+    H["按跳数距离加权"]
+    I["hydrateChunks() 补全元数据"]
+    J["最终结果"]
+
+    A --> B --> C --> D --> E --> G
+    F --> G --> H --> I --> J
 ```
 
 第一遍找到锚点（anchor），第二遍沿着调用图扩展，最终返回结构感知的检索结果。
@@ -414,97 +374,27 @@ flowchart TD
 
 ### 核心表关系
 
+| 表 | 说明 |
+|---|---|
+| `pages` | 页面主表 |
+| `content_chunks` | 页面分块 |
+| `links` | 知识图谱边 |
+| `code_edges_chunk` | 代码调用边 |
+| `code_edges_symbol` | 符号表 |
+| `timeline_entries` | 时间线条目 |
+| `tags` / `page_tags` | 标签系统 |
+
 ```{mermaid}
 erDiagram
     pages ||--o{ content_chunks : "1:N"
-    pages ||--o{ links : "from_page"
-    pages ||--o{ links : "to_page"
+    pages ||--o{ links : "from"
+    pages ||--o{ links : "to"
     pages ||--o{ timeline_entries : "1:N"
-    pages ||--o{ code_edges_chunk : "from_chunk"
-    pages ||--o{ code_edges_chunk : "to_chunk"
-    
-    content_chunks ||--o{ code_edges_chunk : "from"
-    content_chunks ||--o{ code_edges_symbol : "N:1"
-    
-    tags }o--|| pages : "N:M"
-    
-    pages {
-        uuid id PK
-        text slug UK
-        text title
-        text type
-        text compiled_truth
-        text timeline
-        jsonb frontmatter
-        integer remote
-        timestamptz created_at
-        timestamptz updated_at
-    }
-    
-    content_chunks {
-        uuid id PK
-        uuid page_id FK
-        text chunk_source
-        text content
-        vector embedding
-        integer token_count
-        integer start_char_index
-        integer end_char_index
-        boolean is_dirty
-        timestamptz created_at
-        timestamptz updated_at
-    }
-    
-    links {
-        uuid id PK
-        uuid from_page_id FK
-        uuid to_page_id FK
-        text link_type
-        text context
-        text link_source
-        text origin_slug
-        text origin_field
-        timestamptz created_at
-    }
-    
-    code_edges_chunk {
-        uuid id PK
-        uuid from_chunk_id FK
-        uuid to_chunk_id FK
-        text from_function
-        text to_function
-        text edge_type
-        timestamptz created_at
-    }
-    
-    code_edges_symbol {
-        uuid id PK
-        uuid from_chunk_id FK
-        text symbol_name
-        text symbol_type
-        uuid definition_chunk_id FK
-        timestamptz created_at
-    }
-    
-    timeline_entries {
-        uuid id PK
-        uuid page_id FK
-        text date
-        text description
-        text entry_type
-        timestamptz created_at
-    }
-    
-    tags {
-        uuid id PK
-        text name UK
-        timestamptz created_at
-    }
-    
-    page_tags {
-        uuid page_id FK
-        uuid tag_id FK
-    }
+    content_chunks ||--o{ code_edges_chunk : "calls"
+    content_chunks ||--o{ code_edges_symbol : "defines"
+    code_edges_chunk }o--|| code_edges_symbol : "resolves"
+    tags }o--o{ page_tags : "N:M"
+    page_tags }o--|| pages : "N:M"
 ```
 
 ### 关键索引
