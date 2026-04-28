@@ -22,18 +22,18 @@
 | `timeline` | text | 时间线部分内容 |
 | `frontmatter` | JSONB | 解析后的 YAML 元数据 |
 | `remote` | integer | **信任边界标记**：0=本地生成（trusted），1=外部导入（untrusted） |
-
-#### Page 的 ER 关系
-
-```{mermaid}
-erDiagram
-    pages ||--o{ content_chunks : "has"
-    pages ||--o{ links : "from"
-    pages ||--o{ links : "to"
-    pages ||--o{ timeline_entries : "has"
-```
 | `created_at` | timestamptz | 创建时间戳 |
 | `updated_at` | timestamptz | 最后更新时间戳 |
+
+> **图：Page 实体与其他实体的关系**
+>
+> ```{mermaid}
+> erDiagram
+>     pages ||--o{ content_chunks : "has"
+>     pages ||--o{ links : "from"
+>     pages ||--o{ links : "to"
+>     pages ||--o{ timeline_entries : "has"
+> ```
 
 ### Markdown 文件格式
 
@@ -101,10 +101,12 @@ Slug 的特点：
 
 #### Chunk 与 Page 的关系
 
-```{mermaid}
-erDiagram
-    pages ||--o{ content_chunks : "one-to-many"
-```
+> **图：Chunk 与 Page 的关系**
+>
+> ```{mermaid}
+> erDiagram
+>     pages ||--o{ content_chunks : "one-to-many"
+> ```
 
 ### 分块策略（Chunker）
 
@@ -131,6 +133,7 @@ flowchart TD
     D1 --> F
     E1 --> F
     F["Chunk 列表"]
+```
 
 #### 1. Recursive（递归文本分块）
 
